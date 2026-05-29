@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name:       Product Archive Grid for Elementor
- * Plugin URI:        https://example.com/product-archive-grid
+ * Plugin URI:        https://github.com/Aspeyash/Product-archive-grid
  * Description:       A premium Elementor widget for WooCommerce product archives. Renders a fully-customisable responsive grid with discount/stock badges, quick view, custom wishlist, AJAX add-to-cart, Buy Now flow that preserves the existing cart, and Astra/Dokan compatibility.
  * Version:           1.1.0
  * Requires at least: 6.0
  * Requires PHP:      7.4
- * Author:            Your Name
- * Author URI:        https://example.com
+ * Author:            ZYMARG
+ * Author URI:        https://zymarg.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       product-archive-grid

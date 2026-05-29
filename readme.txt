@@ -1,5 +1,5 @@
 === Product Archive Grid for Elementor ===
-Contributors: yourname
+Contributors: zymarg
 Tags: woocommerce, elementor, product, grid, archive, dokan, astra, search
 Requires at least: 6.0
 Tested up to: 6.6
