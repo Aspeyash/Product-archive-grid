@@ -1,0 +1,547 @@
+/**
+ * Product Archive Grid — frontend styles.
+ *
+ * Layout per brief:
+ *
+ *   ┌───────────────── Container 1 (1:1) ─────────────────┐
+ *   │  [discount]              [quick view  • desktop]    │
+ *   │                                                     │
+ *   │                  product image                      │
+ *   │                                                     │
+ *   │  [stock]                          [wishlist]        │
+ *   └─────────────────────────────────────────────────────┘
+ *   Container 2:
+ *     row 1:  Title (2 lines clamp)
+ *     row 2:  ★★★★★ 4.5 · 1.2k sold
+ *     row 3:  $19.99  $24.99 (strike sub)            [+ATC]
+ *
+ * Tablet & Mobile: no quick-view; wishlist moves to top-right.
+ *
+ * Class names are BEM-ish:
+ *   .pag-grid             grid container
+ *   .pag-card             single card
+ *   .pag-card__image      square image wrapper
+ *   .pag-card__body       text/content area
+ *   .pag-card__icon-btn   round icon button (quick-view, wishlist)
+ *   .pag-card__atc        round add-to-cart icon
+ *   .pag-badge--discount  top-left
+ *   .pag-badge--stock     bottom-left
+ */
+
+/* ---------------------- Tokens ---------------------- */
+.pag-grid-wrapper {
+	--pag-card-bg: #ffffff;
+	--pag-text: #111827;
+	--pag-muted: #6b7280;
+	--pag-accent: #111111;
+	--pag-discount-bg: #dc2626;
+	--pag-discount-color: #ffffff;
+	--pag-overlay-bg: rgba(255, 255, 255, 0.95);
+	--pag-overlay-color: #111111;
+	--pag-wishlist-active: #dc2626;
+	--pag-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+	--pag-radius: 12px;
+	--pag-icon-size: 38px;
+	--pag-transition: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+
+	width: 100%;
+	color: var(--pag-text);
+}
+
+/* ---------------------- Heading section ---------------------- */
+.pag-heading {
+	margin-bottom: 24px;
+	text-align: left;
+}
+.pag-heading__title {
+	margin: 0;
+	font-size: clamp(20px, 2.4vw, 28px);
+	font-weight: 700;
+	line-height: 1.2;
+}
+.pag-heading__sub {
+	margin: 6px 0 0;
+	color: var(--pag-muted);
+	font-size: 14px;
+}
+
+/* ---------------------- Grid ---------------------- */
+.pag-grid {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	column-gap: 20px;
+	row-gap: 28px;
+}
+
+/* ---------------------- Card ---------------------- */
+.pag-card {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--pag-card-bg);
+	border-radius: var(--pag-radius);
+	overflow: hidden;
+	transition: transform var(--pag-transition), box-shadow var(--pag-transition);
+	min-width: 0; /* prevent grid blowout */
+	position: relative;
+}
+.pag-card:hover {
+	box-shadow: var(--pag-shadow-md);
+	transform: translateY(-2px);
+}
+
+/* ---------------------- Image container ---------------------- */
+.pag-card__image {
+	position: relative;
+	aspect-ratio: 1 / 1;
+	overflow: hidden;
+	background-color: #f3f4f6;
+	border-radius: var(--pag-radius);
+}
+.pag-card__image-link {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+.pag-card__image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+	transition: opacity var(--pag-transition), transform var(--pag-transition);
+}
+.pag-card__image-hover {
+	position: absolute;
+	inset: 0;
+	opacity: 0;
+}
+.pag-card--hover-swap:hover .pag-card__image-main {
+	opacity: 0;
+}
+.pag-card--hover-swap:hover .pag-card__image-hover {
+	opacity: 1;
+}
+
+/* Light hover zoom even without swap */
+.pag-card:not(.pag-card--hover-swap):hover .pag-card__image-main {
+	transform: scale(1.04);
+}
+
+/* ---------------------- Badges ---------------------- */
+.pag-badge {
+	position: absolute;
+	z-index: 2;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 5px 10px;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1.2;
+	letter-spacing: 0.02em;
+	border-radius: 999px;
+	white-space: nowrap;
+	pointer-events: none;
+}
+.pag-badge svg {
+	width: 14px;
+	height: 14px;
+}
+.pag-badge__amount {
+	font-weight: 500;
+	font-size: 11px;
+	opacity: 0.9;
+}
+.pag-badge--discount {
+	top: 10px;
+	left: 10px;
+	background-color: var(--pag-discount-bg);
+	color: var(--pag-discount-color);
+}
+.pag-badge--stock {
+	bottom: 10px;
+	left: 10px;
+	background-color: rgba(17, 17, 17, 0.85);
+	color: #fff;
+}
+.pag-badge--stock.is-instock {
+	background-color: #16a34a;
+}
+.pag-badge--stock.is-outofstock {
+	background-color: #6b7280;
+}
+.pag-badge--stock.is-onbackorder {
+	background-color: #f59e0b;
+}
+.pag-badge--stock.is-lowstock {
+	background-color: #ea580c;
+}
+
+/* ---------------------- Overlay icon buttons ---------------------- */
+.pag-card__icon-btn {
+	position: absolute;
+	z-index: 3;
+	width: var(--pag-icon-size);
+	height: var(--pag-icon-size);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background-color: var(--pag-overlay-bg);
+	color: var(--pag-overlay-color);
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+	transition: transform var(--pag-transition), color var(--pag-transition), background-color var(--pag-transition);
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+}
+.pag-card__icon-btn:hover,
+.pag-card__icon-btn:focus-visible {
+	transform: scale(1.06);
+}
+.pag-card__icon-btn svg {
+	width: 18px;
+	height: 18px;
+}
+.pag-card__icon-btn .pag-card__icon-active {
+	display: none;
+}
+.pag-card__icon-btn.is-active {
+	color: var(--pag-wishlist-active);
+}
+.pag-card__icon-btn.is-active .pag-card__icon-default {
+	display: none;
+}
+.pag-card__icon-btn.is-active .pag-card__icon-active {
+	display: inline-flex;
+}
+
+/* Quick view: top-right (desktop only) */
+.pag-card__quick-view {
+	top: 10px;
+	right: 10px;
+}
+/* Wishlist: bottom-right on desktop */
+.pag-card__wishlist {
+	bottom: 10px;
+	right: 10px;
+}
+
+/* Tablet/mobile breakpoints — wishlist moves to top-right, quick-view hidden */
+@media (max-width: 1024px) {
+	.pag-card__quick-view {
+		display: none !important;
+	}
+	.pag-card__wishlist {
+		top: 10px;
+		right: 10px;
+		bottom: auto;
+	}
+}
+
+/* ---------------------- Card body ---------------------- */
+.pag-card__body {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 14px 12px 12px;
+	flex: 1 1 auto;
+}
+.pag-card__title {
+	margin: 0;
+	font-size: 15px;
+	line-height: 1.35;
+	font-weight: 600;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	min-height: 2.7em; /* keeps row 1 stable */
+}
+.pag-card__title a {
+	color: inherit;
+	text-decoration: none;
+	transition: color var(--pag-transition);
+}
+
+/* ---------------------- Meta row (rating + sold) ---------------------- */
+.pag-card__meta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12.5px;
+	color: var(--pag-muted);
+	flex-wrap: wrap;
+}
+.pag-rating {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.pag-rating__stars {
+	display: inline-flex;
+	align-items: center;
+	gap: 1px;
+	color: #d1d5db;
+}
+.pag-rating__star {
+	display: inline-flex;
+	width: 14px;
+	height: 14px;
+	color: inherit;
+}
+.pag-rating__star.is-filled {
+	color: #f59e0b;
+}
+.pag-rating__star svg {
+	width: 100%;
+	height: 100%;
+}
+.pag-rating__value {
+	font-weight: 600;
+	color: var(--pag-text);
+}
+.pag-rating__divider {
+	margin: 0 2px;
+	color: #d1d5db;
+}
+.pag-sold {
+	color: var(--pag-muted);
+}
+
+/* ---------------------- Price + ATC row ---------------------- */
+.pag-card__row-price {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: auto;
+}
+.pag-price {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	flex-wrap: wrap;
+	min-width: 0;
+}
+.pag-price__current {
+	font-weight: 700;
+	font-size: 16px;
+	color: var(--pag-text);
+}
+.pag-price__current .amount {
+	font-weight: 700;
+}
+.pag-price__old {
+	font-size: 12px;
+	color: #9ca3af;
+	text-decoration: line-through;
+}
+.pag-price__old sub,
+.pag-price__old .amount {
+	font-size: inherit;
+}
+
+/* Add-to-cart round button */
+.pag-card__atc {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: var(--pag-icon-size);
+	height: var(--pag-icon-size);
+	background-color: var(--pag-accent);
+	color: #fff;
+	border: 0;
+	border-radius: 999px;
+	cursor: pointer;
+	text-decoration: none;
+	transition: transform var(--pag-transition), background-color var(--pag-transition);
+}
+.pag-card__atc:hover {
+	transform: scale(1.06);
+	color: #fff;
+	text-decoration: none;
+}
+.pag-card__atc svg {
+	width: 18px;
+	height: 18px;
+}
+.pag-card__atc.is-loading {
+	opacity: 0.75;
+	pointer-events: none;
+}
+.pag-card__atc.is-disabled {
+	opacity: 0.5;
+	pointer-events: none;
+}
+.pag-card__atc.is-added {
+	background-color: #16a34a;
+}
+
+.pag-card__vendor {
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--pag-muted);
+}
+.pag-card__vendor a {
+	color: var(--pag-accent);
+	text-decoration: none;
+}
+.pag-card__vendor a:hover {
+	text-decoration: underline;
+}
+
+/* ---------------------- Empty state ---------------------- */
+.pag-empty {
+	padding: 32px 16px;
+	text-align: center;
+	color: var(--pag-muted);
+	background-color: #f9fafb;
+	border-radius: var(--pag-radius);
+}
+
+/* ---------------------- Pagination / Load more ---------------------- */
+.pag-pagination {
+	margin-top: 28px;
+}
+.pag-pagination ul {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 6px;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.pag-pagination a,
+.pag-pagination span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 36px;
+	height: 36px;
+	padding: 0 10px;
+	border-radius: 6px;
+	background-color: #f3f4f6;
+	color: var(--pag-text);
+	font-size: 14px;
+	text-decoration: none;
+	transition: background-color var(--pag-transition);
+}
+.pag-pagination a:hover {
+	background-color: var(--pag-accent);
+	color: #fff;
+}
+.pag-pagination .current {
+	background-color: var(--pag-accent);
+	color: #fff;
+}
+
+.pag-load-more-wrap {
+	margin-top: 28px;
+	display: flex;
+	justify-content: center;
+}
+.pag-load-more {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 12px 24px;
+	background-color: var(--pag-accent);
+	color: #fff;
+	border: 0;
+	border-radius: 999px;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity var(--pag-transition), transform var(--pag-transition);
+	min-height: 44px; /* a11y tap target */
+}
+.pag-load-more:hover {
+	transform: translateY(-1px);
+}
+.pag-load-more.is-loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+.pag-load-more.is-done {
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* ---------------------- Skeleton loader ---------------------- */
+.pag-grid.is-loading .pag-card {
+	pointer-events: none;
+}
+@keyframes pag-skeleton-pulse {
+	0%, 100% { opacity: 1; }
+	50%      { opacity: 0.5; }
+}
+
+/* ---------------------- Utility ---------------------- */
+.pag-sr-only {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ---------------------- Responsive grid fallbacks ---------------------- */
+@media (max-width: 1024px) {
+	.pag-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (max-width: 480px) {
+	.pag-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ---------------------- Reduced motion ---------------------- */
+@media (prefers-reduced-motion: reduce) {
+	.pag-card,
+	.pag-card__atc,
+	.pag-card__icon-btn,
+	.pag-card__image-main,
+	.pag-card__image-hover,
+	.pag-load-more {
+		transition: none !important;
+	}
+}
+
+/* ---------------------- RTL ---------------------- */
+.rtl .pag-badge--discount,
+[dir="rtl"] .pag-badge--discount {
+	left: auto;
+	right: 10px;
+}
+.rtl .pag-badge--stock,
+[dir="rtl"] .pag-badge--stock {
+	left: auto;
+	right: 10px;
+}
+.rtl .pag-card__quick-view,
+[dir="rtl"] .pag-card__quick-view {
+	right: auto;
+	left: 10px;
+}
+.rtl .pag-card__wishlist,
+[dir="rtl"] .pag-card__wishlist {
+	right: auto;
+	left: 10px;
+}
+@media (max-width: 1024px) {
+	.rtl .pag-card__wishlist,
+	[dir="rtl"] .pag-card__wishlist {
+		left: 10px;
+		right: auto;
+	}
+}
