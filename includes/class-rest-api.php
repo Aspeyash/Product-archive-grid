@@ -144,10 +144,28 @@ class REST_API {
 			return $rl;
 		}
 
-		if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		if ( ! function_exists( 'WC' ) ) {
 			return new \WP_Error(
-				'pag_wc_unavailable',
-				__( 'WooCommerce is not available.', 'product-archive-grid' ),
+				'pag_no_wc',
+				__( 'WooCommerce is not active.', 'product-archive-grid' ),
+				[ 'status' => 500 ]
+			);
+		}
+
+		// WC()->cart isn't auto-initialised in REST/AJAX request contexts (only
+		// on front-end page loads via wc_init_frontend_default_hooks). Without
+		// this call WC()->cart is null and the legacy guard below returned
+		// "WooCommerce not available" even though WC was running fine. This
+		// is the documented WC idiom for loading the cart from REST/AJAX and
+		// is a no-op when the cart is already loaded.
+		if ( function_exists( 'wc_load_cart' ) ) {
+			wc_load_cart();
+		}
+
+		if ( ! WC()->cart ) {
+			return new \WP_Error(
+				'pag_cart_unavailable',
+				__( 'Cart could not be initialized.', 'product-archive-grid' ),
 				[ 'status' => 500 ]
 			);
 		}
