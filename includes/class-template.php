@@ -56,14 +56,40 @@ final class Template {
 	/**
 	 * Load a template file with extracted variables.
 	 *
-	 * @param string $name Template name (matches templates/<name>.php).
+	 * @param string $name Template name (matches templates/<name>.php). Forward
+	 *                     slashes are allowed for sub-directories (e.g.
+	 *                     'parts/price'). Allowed characters are restricted to
+	 *                     [A-Za-z0-9_\-/], and the resolved path must stay
+	 *                     inside templates/ to prevent traversal.
 	 * @param array  $vars Variables to extract.
 	 */
 	public static function load_part( $name, array $vars = [] ) {
-		$file = PAG_TEMPLATES_DIR . sanitize_file_name( $name ) . '.php';
-		if ( ! file_exists( $file ) ) {
+		// Whitelist: letters, digits, underscores, dashes, and forward slashes.
+		// (Note: WP's sanitize_file_name() strips the slash, which broke loading
+		// of any template inside templates/parts/. We validate manually.)
+		if ( ! is_string( $name ) || '' === $name ) {
 			return;
 		}
+		if ( ! preg_match( '#^[A-Za-z0-9_\-/]+$#', $name ) ) {
+			return;
+		}
+		// Block any traversal pattern explicitly.
+		if ( false !== strpos( $name, '..' ) ) {
+			return;
+		}
+
+		$file = PAG_TEMPLATES_DIR . $name . '.php';
+
+		// Confine resolved path to templates/.
+		$real_base = realpath( PAG_TEMPLATES_DIR );
+		$real_file = realpath( $file );
+		if ( ! $real_base || ! $real_file ) {
+			return;
+		}
+		if ( strpos( $real_file, rtrim( $real_base, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR ) !== 0 ) {
+			return;
+		}
+
 		// phpcs:ignore WordPress.PHP.DontExtract
 		extract( $vars, EXTR_SKIP );
 		include $file;
