@@ -4,7 +4,7 @@ Tags: woocommerce, elementor, product, grid, archive, dokan, astra, search
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 WC requires at least: 7.0
 WC tested up to: 9.0
 License: GPLv2 or later
@@ -60,6 +60,10 @@ A focused Elementor widget that renders a fully-customisable, responsive WooComm
 4. Edit any page or archive template with Elementor and search for **Product Archive Grid**.
 
 == Changelog ==
+
+= 1.0.2 =
+* Fix: "Cookie check failed" on all action buttons (Add to Cart, Wishlist, Quick View, Buy Now, Load More). The plugin was generating a custom `pag_rest` nonce but WordPress's REST cookie authentication only recognises the standard `wp_rest` action. Changed the nonce action to `wp_rest` so both our verification and WP core's cookie auth pass simultaneously.
+* Feature: Products per page now accepts `-1` or empty to show all products without a limit (previously capped at 60). Useful for small catalogues or "show everything" archive pages. The control also accepts up to 200.
 
 = 1.0.1 =
 * Fix: Card sub-templates (discount badge, stock badge, Quick View button, Wishlist button, rating, sold count, price, Add to Cart) were rendering as empty wrappers because the template loader called `sanitize_file_name()` on names that contained a forward slash (e.g. `parts/price`). WordPress strips slashes from filenames, so the resolved path no longer existed and the include silently failed. The loader now uses an explicit allow-list regex plus a `realpath()` containment check.

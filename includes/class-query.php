@@ -29,7 +29,13 @@ final class Query {
 			$raw['source'] ?? 'all',
 			[ 'all', 'sale', 'featured', 'best_sellers', 'recent', 'by_category', 'manual', 'current_search' ]
 		);
-		$out['per_page']       = max( 1, min( 60, (int) ( $raw['per_page'] ?? 12 ) ) );
+		$out['per_page']       = isset( $raw['per_page'] ) && '' !== $raw['per_page']
+			? (int) $raw['per_page']
+			: -1;
+		// -1 = no limit (show all). Otherwise clamp to [1, 200].
+		if ( $out['per_page'] !== -1 ) {
+			$out['per_page'] = max( 1, min( 200, $out['per_page'] ) );
+		}
 		$out['orderby']        = self::pick(
 			$raw['orderby'] ?? 'date',
 			[ 'date', 'title', 'price', 'popularity', 'rating', 'menu_order', 'rand' ]

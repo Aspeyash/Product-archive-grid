@@ -14,11 +14,17 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Security {
 
-	/** Nonce action used for all PAG REST + AJAX requests. */
-	const NONCE_ACTION = 'pag_rest';
+	/**
+	 * Nonce action. We use the standard WordPress REST nonce ('wp_rest') so
+	 * that WordPress's built-in cookie authentication middleware passes when
+	 * the X-WP-Nonce header is present. Using a custom action caused "cookie
+	 * check failed" because WP core only recognizes 'wp_rest'.
+	 */
+	const NONCE_ACTION = 'wp_rest';
 
 	/**
-	 * Create a nonce for our REST API.
+	 * Create a nonce for our REST API. Uses the standard WP REST nonce so both
+	 * our permission_public() check and WP's cookie auth pass simultaneously.
 	 *
 	 * @return string
 	 */
@@ -27,7 +33,7 @@ final class Security {
 	}
 
 	/**
-	 * Verify a request's nonce. Looks at common locations: body, header, query.
+	 * Verify a request's nonce. Looks at common locations: header, body, query.
 	 *
 	 * @param \WP_REST_Request $request Request.
 	 * @return bool
@@ -45,12 +51,11 @@ final class Security {
 			}
 		}
 
-		// REST cookie auth uses 'wp_rest' nonce. Accept either.
 		if ( '' === $nonce ) {
 			return false;
 		}
-		return (bool) wp_verify_nonce( $nonce, self::NONCE_ACTION )
-			|| (bool) wp_verify_nonce( $nonce, 'wp_rest' );
+
+		return (bool) wp_verify_nonce( $nonce, self::NONCE_ACTION );
 	}
 
 	/**

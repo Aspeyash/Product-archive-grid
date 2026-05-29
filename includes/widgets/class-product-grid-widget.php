@@ -195,11 +195,12 @@ class Product_Grid_Widget extends Widget_Base {
 		$this->add_control(
 			'per_page',
 			[
-				'label'   => __( 'Products per page', 'product-archive-grid' ),
-				'type'    => Controls_Manager::NUMBER,
-				'min'     => 1,
-				'max'     => 60,
-				'default' => 12,
+				'label'       => __( 'Products per page', 'product-archive-grid' ),
+				'type'        => Controls_Manager::NUMBER,
+				'min'         => -1,
+				'max'         => 200,
+				'default'     => 12,
+				'description' => __( 'Set to -1 or leave empty for no limit (show all products).', 'product-archive-grid' ),
 			]
 		);
 
@@ -1020,7 +1021,7 @@ class Product_Grid_Widget extends Widget_Base {
 			'source'        => $raw['source'] ?? 'all',
 			'orderby'       => $raw['orderby'] ?? 'date',
 			'order'         => $raw['order']   ?? 'DESC',
-			'per_page'      => isset( $raw['per_page'] ) ? (int) $raw['per_page'] : 12,
+			'per_page'      => isset( $raw['per_page'] ) && '' !== $raw['per_page'] ? (int) $raw['per_page'] : -1,
 			'include_ids'   => $raw['include_ids']  ?? '',
 			'exclude_ids'   => $raw['exclude_ids']  ?? '',
 			'include_cats'  => $raw['include_cats'] ?? [],
