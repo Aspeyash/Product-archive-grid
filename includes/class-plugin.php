@@ -54,6 +54,30 @@ final class Plugin {
 		$this->load_files();
 		$this->init_subsystems();
 		$this->register_hooks();
+		$this->maybe_init_updater();
+	}
+
+	/**
+	 * Wire up the GitHub-Releases auto-updater (admin/cron contexts only).
+	 *
+	 * Mirrors the same mechanism shipped in zymarg-algolia-search: hooks into
+	 * pre_set_site_transient_update_plugins + plugins_api so the plugin
+	 * appears in the standard WP Plugins -> Updates UI when a new GitHub
+	 * Release is published.
+	 */
+	private function maybe_init_updater() {
+		if ( ! is_admin() && ( ! defined( 'DOING_CRON' ) || ! DOING_CRON ) ) {
+			return;
+		}
+		require_once PAG_INCLUDES_DIR . 'class-pag-updater.php';
+		new Updater(
+			PAG_PLUGIN_FILE,
+			[
+				'owner'  => 'Aspeyash',
+				'repo'   => 'Product-archive-grid',
+				'branch' => 'main',
+			]
+		);
 	}
 
 	/**
@@ -65,6 +89,8 @@ final class Plugin {
 			'class-rate-limiter.php',
 			'class-rest-api.php',
 			'class-query.php',
+			'class-algolia-query.php',
+			'class-card-data.php',
 			'class-template.php',
 			'class-assets.php',
 			'class-compat-astra.php',

@@ -279,6 +279,42 @@ class Product_Grid_Widget extends Widget_Base {
 			]
 		);
 
+		// ---------------------------------------------------------------------
+		// v1.1.0 — Algolia data-source toggle.
+		//
+		// The toggle is only registered when the ZYMARG Algolia Search plugin
+		// is active (it exposes `zymarg_algolia_get_setting` as the bridge
+		// function). When the plugin is missing we render a helpful notice
+		// instead so users know how to unlock the feature.
+		// ---------------------------------------------------------------------
+		if ( function_exists( 'zymarg_algolia_get_setting' ) ) {
+			$this->add_control(
+				'use_algolia',
+				[
+					'label'        => __( 'Use Algolia for fast queries', 'product-archive-grid' ),
+					'type'         => Controls_Manager::SWITCHER,
+					'return_value' => 'yes',
+					'default'      => '',
+					'description'  => __(
+						'Powers this grid via Algolia instead of WordPress queries. Requires the ZYMARG Algolia Search plugin to be active. Sub-100ms response times even on large catalogs.',
+						'product-archive-grid'
+					),
+					'separator'    => 'before',
+				]
+			);
+		} else {
+			$this->add_control(
+				'use_algolia_notice',
+				[
+					'type'      => Controls_Manager::RAW_HTML,
+					'raw'       => '<div style="padding:10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:3px;font-size:12px;line-height:1.5;color:#78350f;">'
+						. esc_html__( 'Install ZYMARG Algolia Search to enable the Algolia data-source option (sub-100ms grids on large catalogs).', 'product-archive-grid' )
+						. '</div>',
+					'separator' => 'before',
+				]
+			);
+		}
+
 		$this->end_controls_section();
 	}
 
@@ -1016,8 +1052,15 @@ class Product_Grid_Widget extends Widget_Base {
 	private function normalize_settings( array $raw ) {
 		$bool_yes = static fn( $k ) => ( ( $raw[ $k ] ?? '' ) === 'yes' );
 
+		$user_source = $raw['source'] ?? 'all';
+		$use_algolia = $bool_yes( 'use_algolia' ) && function_exists( 'zymarg_algolia_get_setting' );
+
 		$settings = [
-			'source'        => $raw['source'] ?? 'all',
+			// When Algolia is opted in, route through the new data source but
+			// preserve the user's selected mode so Algolia_Query knows which
+			// filter to apply.
+			'source'        => $use_algolia ? 'algolia' : $user_source,
+			'algolia_mode'  => $use_algolia ? $user_source : '',
 			'orderby'       => $raw['orderby'] ?? 'date',
 			'order'         => $raw['order']   ?? 'DESC',
 			'per_page'      => isset( $raw['per_page'] ) ? (int) $raw['per_page'] : 12,
@@ -1054,6 +1097,7 @@ class Product_Grid_Widget extends Widget_Base {
 			'source', 'orderby', 'order', 'per_page',
 			'include_ids', 'exclude_ids', 'include_cats', 'exclude_cats',
 			'hide_oos', 'search_term', 'vendor_id',
+			'algolia_mode',
 			'show_image', 'show_discount_badge', 'show_stock_badge',
 			'show_quick_view', 'show_wishlist', 'show_title', 'show_rating',
 			'show_rating_value', 'show_sold', 'show_price', 'show_old_price',

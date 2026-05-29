@@ -3,14 +3,17 @@
  * "Sold count" indicator. Source: WooCommerce `total_sales` post meta
  * (only counts completed orders).
  *
+ * v1.1.0: reads from $data so the same template works on the Algolia path.
+ *
  * @package ProductArchiveGrid
  *
- * @var \WC_Product $product
+ * @var \WC_Product|null $product
+ * @var array            $data
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$sold = (int) get_post_meta( $product->get_id(), 'total_sales', true );
+$sold = (int) ( $data['total_sales'] ?? 0 );
 if ( $sold <= 0 ) {
 	return;
 }

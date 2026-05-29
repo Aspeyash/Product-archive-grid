@@ -2,16 +2,20 @@
 /**
  * Star rating + numeric value. Hidden entirely when there are no reviews.
  *
+ * v1.1.0: now reads from $data so the same template works on the Algolia
+ * data path.
+ *
  * @package ProductArchiveGrid
  *
- * @var \WC_Product $product
- * @var array       $settings
+ * @var \WC_Product|null $product
+ * @var array            $data
+ * @var array            $settings
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$avg   = (float) $product->get_average_rating();
-$count = (int) $product->get_review_count();
+$avg   = (float) ( $data['rating'] ?? 0 );
+$count = (int)   ( $data['review_count'] ?? 0 );
 
 if ( $avg <= 0 || $count <= 0 ) {
 	return;
