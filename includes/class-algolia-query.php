@@ -311,30 +311,42 @@ final class Algolia_Query extends \WP_Query {
 			$body['filters'] = implode( ' AND ', $filters );
 		}
 
-		// Sort: best_sellers / recent / orderby.
+		// Sort: best_sellers / recent / orderby. Translates to Algolia's
+		// `customRanking` (which sits *after* the default ranking criteria
+		// and lets us bias results without creating a replica index).
+		//
+		// IMPORTANT: Algolia's `ranking` parameter is for the BASE criteria
+		// (typo, geo, words, proximity, attribute, exact, custom, filters)
+		// and DOES NOT accept `field:desc` strings — sending one there is a
+		// silent no-op (or 4xx) and the result order is undefined. The
+		// correct knob is `customRanking` with the format `desc(field)` /
+		// `asc(field)`. (Pre-1.1.0 builds had this wrong; fixed in 1.1.0.)
 		$orderby = isset( $args['orderby'] ) ? (string) $args['orderby'] : '';
-		$order   = ( isset( $args['order'] ) && 'ASC' === strtoupper( (string) $args['order'] ) ) ? 'asc' : 'desc';
-		$sort    = '';
+		$order_dir = ( isset( $args['order'] ) && 'ASC' === strtoupper( (string) $args['order'] ) ) ? 'asc' : 'desc';
+		$sort_field = '';
+		$sort_dir   = 'desc';
 		if ( 'best_sellers' === $mode ) {
-			$sort = 'total_sales:desc';
+			$sort_field = 'total_sales';
 		} elseif ( 'recent' === $mode ) {
-			$sort = 'date_created:desc';
+			$sort_field = 'date_created';
 		} elseif ( 'price' === $orderby ) {
-			$sort = 'price:' . $order;
+			$sort_field = 'price';
+			$sort_dir   = $order_dir;
 		} elseif ( 'rating' === $orderby ) {
-			$sort = 'average_rating:' . $order;
+			$sort_field = 'average_rating';
+			$sort_dir   = $order_dir;
 		} elseif ( 'popularity' === $orderby ) {
-			$sort = 'total_sales:' . $order;
+			$sort_field = 'total_sales';
+			$sort_dir   = $order_dir;
 		} elseif ( 'date' === $orderby ) {
-			$sort = 'date_created:' . $order;
+			$sort_field = 'date_created';
+			$sort_dir   = $order_dir;
 		} elseif ( 'title' === $orderby ) {
-			$sort = 'name:' . $order;
+			$sort_field = 'name';
+			$sort_dir   = $order_dir;
 		}
-		if ( '' !== $sort ) {
-			// Use index replica naming convention; safe to send as a hint —
-			// Algolia ignores unknown params. Hosts that haven't created
-			// replicas just get the default ranking, which is acceptable.
-			$body['ranking'] = [ $sort ];
+		if ( '' !== $sort_field ) {
+			$body['customRanking'] = [ $sort_dir . '(' . $sort_field . ')' ];
 		}
 
 		/**
