@@ -1,0 +1,8 @@
+/**
+ * Editor preview styles. The Elementor editor renders the widget but cannot
+ * exercise REST endpoints — we only need ensure controls look right.
+ */
+.elementor-editor-active .pag-card__atc.is-ajax,
+.elementor-editor-active .pag-card__quick-view {
+	pointer-events: none;
+}
