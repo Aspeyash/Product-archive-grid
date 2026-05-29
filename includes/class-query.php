@@ -27,7 +27,7 @@ final class Query {
 
 		$out['source']         = self::pick(
 			$raw['source'] ?? 'all',
-			[ 'all', 'sale', 'featured', 'best_sellers', 'recent', 'by_category', 'manual', 'current_search' ]
+			[ 'all', 'sale', 'featured', 'best_sellers', 'recent', 'by_category', 'manual', 'current_search', 'algolia', 'vendor' ]
 		);
 		$out['per_page']       = max( 1, min( 60, (int) ( $raw['per_page'] ?? 12 ) ) );
 		$out['orderby']        = self::pick(
@@ -42,6 +42,16 @@ final class Query {
 		$out['exclude_cats']   = self::sanitize_term_list( $raw['exclude_cats'] ?? '', 'product_cat' );
 		$out['search_term']    = isset( $raw['search_term'] ) ? sanitize_text_field( (string) $raw['search_term'] ) : '';
 		$out['vendor_id']      = isset( $raw['vendor_id'] ) ? absint( $raw['vendor_id'] ) : 0;
+
+		// Algolia data-source routing (v1.1.0). When 'algolia' is selected
+		// we preserve the user's underlying source mode (featured / sale /
+		// best_sellers / etc) in 'algolia_mode' so Algolia_Query can pick the
+		// right filter. Allowed values match the SOURCE allow-list above
+		// plus 'current_archive' (auto-detected by Algolia_Query).
+		$out['algolia_mode']   = self::pick(
+			$raw['algolia_mode'] ?? '',
+			[ '', 'all', 'sale', 'featured', 'best_sellers', 'recent', 'by_category', 'manual', 'current_search', 'current_archive', 'vendor' ]
+		);
 
 		// Toggles flow through but aren't query-relevant; preserved for render.
 		$display_keys = [
@@ -68,6 +78,22 @@ final class Query {
 	 */
 	public static function build( array $settings, $page = 1 ) {
 		$page = max( 1, (int) $page );
+
+		// v1.1.0 — Algolia data-source router. Delegate to Algolia_Query when
+		// the widget opted in AND the credentials bridge function exists.
+		// Silently falls through to WP_Query if zymarg-algolia-search isn't
+		// active, so a widget set to "use Algolia" never breaks the page.
+		if ( 'algolia' === ( $settings['source'] ?? '' ) && function_exists( 'zymarg_algolia_get_setting' ) ) {
+			if ( ! class_exists( __NAMESPACE__ . '\\Algolia_Query' ) ) {
+				$path = PAG_INCLUDES_DIR . 'class-algolia-query.php';
+				if ( file_exists( $path ) ) {
+					require_once $path;
+				}
+			}
+			if ( class_exists( __NAMESPACE__ . '\\Algolia_Query' ) ) {
+				return Algolia_Query::build( $settings, $page );
+			}
+		}
 
 		// Inherit the main query when we're on the WC search archive and the
 		// widget was set to "current_search".

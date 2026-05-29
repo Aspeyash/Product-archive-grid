@@ -2,15 +2,36 @@
 /**
  * Discount badge.
  *
+ * v1.1.0: when the WC_Product isn't available (Algolia simple-product path)
+ * the discount info is computed from $data's regular/sale prices.
+ *
  * @package ProductArchiveGrid
  *
- * @var \WC_Product $product
- * @var array       $settings
+ * @var \WC_Product|null $product
+ * @var array            $data
+ * @var array            $settings
  */
 
 defined( 'ABSPATH' ) || exit;
 
-$info = \PAG\Template::discount_info( $product );
+if ( $product instanceof \WC_Product ) {
+	$info = \PAG\Template::discount_info( $product );
+} else {
+	$info = [];
+	if ( ! empty( $data['on_sale'] ) ) {
+		$regular = (float) ( $data['regular_price'] ?? 0 );
+		$sale    = (float) ( $data['sale_price'] ?? 0 );
+		if ( $regular > 0 && $sale > 0 && $sale < $regular ) {
+			$info = [
+				'percent' => (int) round( ( ( $regular - $sale ) / $regular ) * 100 ),
+				'amount'  => $regular - $sale,
+				'regular' => $regular,
+				'sale'    => $sale,
+			];
+		}
+	}
+}
+
 if ( empty( $info ) ) {
 	return;
 }

@@ -21,13 +21,35 @@ final class Template {
 	 * @param array $settings   Sanitised settings.
 	 */
 	public static function render_card( $product_id, array $settings ) {
-		$product = Security::get_validated_product( $product_id );
-		if ( ! $product || ! $product->is_visible() ) {
-			return;
+		// Detect whether the current $post is backed by Algolia data (set up
+		// in Algolia_Query::the_post()). On that path we deliberately avoid
+		// the wc_get_product() DB hit for simple products — that's the whole
+		// point of using Algolia. Variable products still resolve a real
+		// WC_Product so add-to-cart URLs etc work, but cheaply (object cache).
+		global $post;
+		$has_algolia = ( isset( $post ) && is_object( $post ) && isset( $post->_pag_algolia_data ) && is_array( $post->_pag_algolia_data ) );
+
+		$data    = pag_card_data();
+		$product = null;
+
+		if ( $has_algolia ) {
+			// Variable / external / grouped products: still need the WC API
+			// for add-to-cart URL routing. Simple products can render entirely
+			// from Algolia data.
+			$type = isset( $data['product_type'] ) ? (string) $data['product_type'] : 'simple';
+			if ( 'simple' !== $type ) {
+				$product = Security::get_validated_product( $product_id );
+			}
+		} else {
+			$product = Security::get_validated_product( $product_id );
+			if ( ! $product || ! $product->is_visible() ) {
+				return;
+			}
 		}
 
 		$ctx = [
-			'product'  => $product,
+			'product'  => $product, // may be null on the Algolia simple-product path
+			'data'     => $data,
 			'settings' => $settings,
 		];
 
