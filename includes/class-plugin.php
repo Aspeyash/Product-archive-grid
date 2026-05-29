@@ -65,6 +65,8 @@ final class Plugin {
 			'class-rate-limiter.php',
 			'class-rest-api.php',
 			'class-query.php',
+			'class-algolia-query.php',
+			'class-card-data.php',
 			'class-template.php',
 			'class-assets.php',
 			'class-compat-astra.php',
