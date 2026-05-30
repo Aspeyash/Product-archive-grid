@@ -4,7 +4,7 @@ Tags: woocommerce, elementor, product, grid, archive, dokan, astra, search
 Requires at least: 6.0
 Tested up to: 6.6
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 WC requires at least: 7.0
 WC tested up to: 9.0
 License: GPLv2 or later
@@ -60,6 +60,13 @@ A focused Elementor widget that renders a fully-customisable, responsive WooComm
 4. Edit any page or archive template with Elementor and search for **Product Archive Grid**.
 
 == Changelog ==
+
+= 1.1.1 =
+* Maintenance release. Bundles the post-1.1.0 amendments into a single installable build so existing 1.1.0 sites pick them up via the GitHub auto-updater:
+  * GitHub Releases auto-updater (`includes/class-pag-updater.php`) is now part of the published version, so future updates flow through Plugins -> Updates automatically.
+  * `wc_load_cart()` is called defensively inside the `/add-to-cart` and `/buy-now` REST handlers; resolves the "WooCommerce not active" error some environments hit because WC does not auto-init the cart object on REST requests. Distinct error codes (`pag_no_wc` vs `pag_cart_unavailable`) for clearer diagnostics.
+  * Algolia ranking config now uses the supported `customRanking: ["desc(field)"]` syntax instead of the invalid `ranking:field:desc` form.
+  * Plugin header author corrected to "ZYMARG".
 
 = 1.1.0 =
 * **New: Optional Algolia data source.** Each grid widget now has a "Use Algolia for fast queries" toggle (Layout tab). When enabled the grid is powered by Algolia instead of `WP_Query`, with sub-100ms response times even on very large catalogs. Default behaviour is unchanged — widgets without the toggle render byte-identically to v1.0.1.
