@@ -213,7 +213,11 @@ final class Algolia_Query extends \WP_Query {
 				if ( ! empty( $cats ) ) {
 					$or = [];
 					foreach ( $cats as $slug ) {
-						$or[] = 'categories:"' . self::escape_filter_value( (string) $slug ) . '"';
+						// Filter on category_slugs (the indexer stores slugs in
+						// this field specifically for filtering). The legacy
+						// `categories` field stores human-readable names and
+						// would silently miss whenever a slug != name.
+						$or[] = 'category_slugs:"' . self::escape_filter_value( (string) $slug ) . '"';
 					}
 					$filters[] = '(' . implode( ' OR ', $or ) . ')';
 				}
@@ -227,7 +231,7 @@ final class Algolia_Query extends \WP_Query {
 				$obj = function_exists( 'get_queried_object' ) ? get_queried_object() : null;
 				if ( $obj instanceof \WP_Term ) {
 					if ( 'product_cat' === $obj->taxonomy ) {
-						$filters[] = 'categories:"' . self::escape_filter_value( (string) $obj->slug ) . '"';
+						$filters[] = 'category_slugs:"' . self::escape_filter_value( (string) $obj->slug ) . '"';
 					} elseif ( 'product_tag' === $obj->taxonomy ) {
 						$filters[] = 'tags:"' . self::escape_filter_value( (string) $obj->name ) . '"';
 					}
@@ -266,7 +270,7 @@ final class Algolia_Query extends \WP_Query {
 				if ( ! empty( $args['include_cats'] ) ) {
 					$or = [];
 					foreach ( (array) $args['include_cats'] as $slug ) {
-						$or[] = 'categories:"' . self::escape_filter_value( (string) $slug ) . '"';
+						$or[] = 'category_slugs:"' . self::escape_filter_value( (string) $slug ) . '"';
 					}
 					$filters[] = '(' . implode( ' OR ', $or ) . ')';
 				}
@@ -289,7 +293,7 @@ final class Algolia_Query extends \WP_Query {
 		// Exclude categories.
 		if ( ! empty( $args['exclude_cats'] ) ) {
 			foreach ( (array) $args['exclude_cats'] as $slug ) {
-				$filters[] = 'NOT categories:"' . self::escape_filter_value( (string) $slug ) . '"';
+				$filters[] = 'NOT category_slugs:"' . self::escape_filter_value( (string) $slug ) . '"';
 			}
 		}
 
