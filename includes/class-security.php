@@ -20,10 +20,21 @@ final class Security {
 	/**
 	 * Create a nonce for our REST API.
 	 *
+	 * IMPORTANT: We deliberately use the `wp_rest` action (not `pag_rest`)
+	 * even though our verify_request() accepts either. WordPress core's
+	 * rest_cookie_check_errors() runs before any plugin permission_callback
+	 * and validates X-WP-Nonce specifically against the `wp_rest` action.
+	 * If the nonce we send doesn't validate there, core returns
+	 * "Cookie check failed" with a 403 and our REST handler is never reached
+	 * — affecting every logged-in user (admins included).
+	 *
+	 * Generating against `wp_rest` makes core happy AND still passes our
+	 * own verify_request() check (which accepts wp_rest as a fallback).
+	 *
 	 * @return string
 	 */
 	public static function nonce() {
-		return wp_create_nonce( self::NONCE_ACTION );
+		return wp_create_nonce( 'wp_rest' );
 	}
 
 	/**

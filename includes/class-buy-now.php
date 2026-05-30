@@ -203,6 +203,19 @@ class Buy_Now {
 			wc_load_cart();
 		}
 
+		// Defensive: on some hosts (Pantheon edge cache, Hostinger Business
+		// with certain PHP-FPM configs) WC()->session can remain null after
+		// wc_load_cart() in a REST context, which then leaves WC()->cart null
+		// too. Force-init the session handler ourselves before the cart guard
+		// below runs.
+		if ( null === WC()->session && class_exists( 'WC_Session_Handler' ) ) {
+			WC()->session = new \WC_Session_Handler();
+			WC()->session->init();
+			if ( null === WC()->cart ) {
+				WC()->initialize_cart();
+			}
+		}
+
 		if ( ! WC()->cart ) {
 			return new \WP_Error(
 				'pag_cart_unavailable',

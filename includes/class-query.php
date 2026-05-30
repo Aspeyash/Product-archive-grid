@@ -16,6 +16,37 @@ defined( 'ABSPATH' ) || exit;
 final class Query {
 
 	/**
+	 * Resolve the user-facing per_page selection into a concrete integer.
+	 *
+	 * Accepts:
+	 *   - 'none' / '' / 0   → 100 (the hard cap; "None" in the widget UI)
+	 *   - any positive int  → clamped to [1, 100]
+	 *
+	 * The 100 cap is a safety guard. WP_Query with posts_per_page = -1 on a
+	 * 50K-product catalog will exhaust PHP memory and crash the page; Algolia
+	 * also caps hitsPerPage at 1000 per request. 100 is a generous practical
+	 * ceiling that keeps the front-end render fast on every catalog size.
+	 *
+	 * Lives on Query (not the widget) so both the widget render path AND the
+	 * load-more REST handler can call it. The widget class isn't loaded on
+	 * REST requests because Elementor's widget registration only fires on
+	 * frontend page renders.
+	 *
+	 * @param mixed $raw Raw value (string from SELECT control or int).
+	 * @return int 1..100
+	 */
+	public static function resolve_per_page( $raw ) {
+		if ( 'none' === $raw || '' === $raw || null === $raw ) {
+			return 100;
+		}
+		$n = (int) $raw;
+		if ( $n <= 0 ) {
+			return 100;
+		}
+		return max( 1, min( 100, $n ) );
+	}
+
+	/**
 	 * Sanitise the settings payload that crosses trust boundaries (load-more
 	 * REST request). Returns only known keys with strictly-typed values.
 	 *
@@ -29,7 +60,7 @@ final class Query {
 			$raw['source'] ?? 'all',
 			[ 'all', 'sale', 'featured', 'best_sellers', 'recent', 'by_category', 'manual', 'current_search', 'algolia', 'vendor' ]
 		);
-		$out['per_page']       = max( 1, min( 60, (int) ( $raw['per_page'] ?? 12 ) ) );
+		$out['per_page']       = self::resolve_per_page( $raw['per_page'] ?? 12 );
 		$out['orderby']        = self::pick(
 			$raw['orderby'] ?? 'date',
 			[ 'date', 'title', 'price', 'popularity', 'rating', 'menu_order', 'rand' ]

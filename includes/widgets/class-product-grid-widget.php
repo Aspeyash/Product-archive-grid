@@ -195,11 +195,19 @@ class Product_Grid_Widget extends Widget_Base {
 		$this->add_control(
 			'per_page',
 			[
-				'label'   => __( 'Products per page', 'product-archive-grid' ),
-				'type'    => Controls_Manager::NUMBER,
-				'min'     => 1,
-				'max'     => 60,
-				'default' => 12,
+				'label'       => __( 'Products per page', 'product-archive-grid' ),
+				'type'        => Controls_Manager::SELECT,
+				'default'     => '12',
+				'options'     => [
+					'12'   => '12',
+					'24'   => '24',
+					'36'   => '36',
+					'48'   => '48',
+					'60'   => '60',
+					'100'  => '100',
+					'none' => __( 'None (up to 100)', 'product-archive-grid' ),
+				],
+				'description' => __( 'How many products to show per page. "None" shows up to 100 (a hard cap to keep the page from crashing on large catalogs).', 'product-archive-grid' ),
 			]
 		);
 
@@ -1063,7 +1071,7 @@ class Product_Grid_Widget extends Widget_Base {
 			'algolia_mode'  => $use_algolia ? $user_source : '',
 			'orderby'       => $raw['orderby'] ?? 'date',
 			'order'         => $raw['order']   ?? 'DESC',
-			'per_page'      => isset( $raw['per_page'] ) ? (int) $raw['per_page'] : 12,
+			'per_page'      => self::resolve_per_page( $raw['per_page'] ?? 12 ),
 			'include_ids'   => $raw['include_ids']  ?? '',
 			'exclude_ids'   => $raw['exclude_ids']  ?? '',
 			'include_cats'  => $raw['include_cats'] ?? [],
@@ -1083,6 +1091,21 @@ class Product_Grid_Widget extends Widget_Base {
 		}
 
 		return Query::sanitize_settings( $settings );
+	}
+
+	/**
+	 * Resolve the user-facing per_page selection into a concrete integer.
+	 *
+	 * Thin wrapper around PAG\Query::resolve_per_page so callers in the
+	 * widget namespace don't have to reach across namespaces. See Query
+	 * for the canonical implementation and rationale (100-cap safety
+	 * guard, etc.).
+	 *
+	 * @param mixed $raw Raw value from Elementor settings.
+	 * @return int 1..100
+	 */
+	public static function resolve_per_page( $raw ) {
+		return \PAG\Query::resolve_per_page( $raw );
 	}
 
 	/**
